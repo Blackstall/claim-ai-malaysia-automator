@@ -24,16 +24,11 @@ const Header = () => {
   
   return (
     <header 
-      className={`w-full z-50 transition-all duration-300 ${
+      className={`w-full z-50 fixed transition-all duration-500 ease-in-out ${
         scrolled 
-        ? "fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-md py-2" 
-        : "relative bg-transparent py-4"
+        ? "bg-white/90 backdrop-blur-sm shadow-md py-2" 
+        : "bg-transparent py-4"
       }`}
-      style={{
-        backgroundImage: scrolled ? 'none' : 'url("https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2029&auto=format&fit=crop&ixlib=rb-4.0.3")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center">

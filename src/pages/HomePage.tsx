@@ -33,7 +33,15 @@ const HomePage = () => {
     <div className="flex flex-col min-h-screen">
       {/* Hero Section with Parallax */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0A3675] via-[#0A4D8C] to-[#05A5A5] z-0"></div>
+        {/* Background image with overlay */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1521791055366-0d553872125f?q=80&w=2069&auto=format&fit=crop" 
+            alt="People discussing insurance claims" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0A3675]/90 via-[#0A4D8C]/90 to-[#05A5A5]/90"></div>
+        </div>
         
         {/* Floating elements for visual effect */}
         <div ref={parallaxRef} className="absolute inset-0 opacity-20 pointer-events-none z-10">
@@ -56,15 +64,15 @@ const HomePage = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center gap-6 animate-slide-up">
-            <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg group text-base px-8 py-6">
+            <Button asChild size="lg" className="bg-green-500 text-white hover:bg-green-600 hover:scale-105 transition-all duration-300 shadow-lg group text-base px-8 py-6 border border-green-400">
               <Link to="/submit-claim" className="flex items-center">
-                <CircleDot className="mr-3 h-5 w-5 transition-transform group-hover:text-accent" />
+                <CircleDot className="mr-3 h-5 w-5 transition-transform group-hover:text-white" />
                 Submit a Claim
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 hover:scale-105 transition-all duration-300 shadow-lg group text-base px-8 py-6">
               <Link to="/dashboard" className="flex items-center">
-                <BarChart3 className="mr-3 h-5 w-5 transition-transform group-hover:text-accent" />
+                <BarChart3 className="mr-3 h-5 w-5 transition-transform group-hover:text-green-400" />
                 View Dashboard
               </Link>
             </Button>
@@ -175,7 +183,7 @@ const HomePage = () => {
               <p className="text-muted-foreground mb-6">
                 Submit your claim now and experience our streamlined processing system. Our AI-powered platform will guide you through each step.
               </p>
-              <Button asChild className="w-full group hover:scale-[1.02] transition-all duration-300">
+              <Button asChild className="w-full bg-green-500 hover:bg-green-600 text-white group hover:scale-[1.02] transition-all duration-300 border border-green-400">
                 <Link to="/submit-claim" className="flex items-center justify-center">
                   Start Your Claim <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
