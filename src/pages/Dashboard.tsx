@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Check, Clock, X, FileText, MessageSquare, ArrowRight } from "lucide-react";
+import { Check, Clock, X, FileText, MessageSquare, ArrowRight, BarChart3, FileCheck } from "lucide-react";
 
 // Sample data for demonstration
 const mockClaims = [
@@ -105,8 +105,9 @@ const Dashboard = () => {
           </p>
         </div>
         
-        <Button asChild className="mt-4 md:mt-0">
-          <Link to="/submit-claim">
+        <Button asChild className="mt-4 md:mt-0 bg-gradient-to-r from-primary to-accent text-white hover:scale-105 transition-transform shadow-lg">
+          <Link to="/submit-claim" className="flex items-center gap-2">
+            <FileCheck className="h-5 w-5" />
             Submit New Claim
           </Link>
         </Button>
@@ -115,7 +116,10 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-green-50 border-green-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Approved Claims</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Check className="h-5 w-5 text-green-600" />
+              Approved Claims
+            </CardTitle>
             <CardDescription>Claims that have been approved</CardDescription>
           </CardHeader>
           <CardContent>
@@ -125,7 +129,10 @@ const Dashboard = () => {
         
         <Card className="bg-blue-50 border-blue-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">In Progress</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-600" />
+              In Progress
+            </CardTitle>
             <CardDescription>Claims being processed</CardDescription>
           </CardHeader>
           <CardContent>
@@ -135,7 +142,10 @@ const Dashboard = () => {
         
         <Card className="bg-red-50 border-red-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Rejected Claims</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <X className="h-5 w-5 text-red-600" />
+              Rejected Claims
+            </CardTitle>
             <CardDescription>Claims that were rejected</CardDescription>
           </CardHeader>
           <CardContent>
@@ -145,7 +155,10 @@ const Dashboard = () => {
       </div>
       
       <div className="mt-12">
-        <h2 className="text-2xl font-semibold mb-6">My Claims</h2>
+        <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
+          <BarChart3 className="h-6 w-6 text-primary" />
+          My Claims
+        </h2>
         
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="mb-6">
@@ -289,8 +302,9 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <p>{claim.description}</p>
-                    <Button size="sm" className="mt-4" asChild>
-                      <Link to={`/chat?claim=${claim.id}`}>
+                    <Button size="sm" className="mt-4 bg-gradient-to-r from-primary to-accent hover:scale-105 transition-all duration-300" asChild>
+                      <Link to={`/chat?claim=${claim.id}`} className="flex items-center">
+                        <MessageSquare className="mr-2 h-4 w-4" />
                         Ask Why This Was Rejected <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>

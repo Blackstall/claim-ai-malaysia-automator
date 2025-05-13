@@ -10,7 +10,7 @@ const Header = () => {
   
   useEffect(() => {
     const handleScroll = () => {
-      const isScrolled = window.scrollY > 20;
+      const isScrolled = window.scrollY > 50;
       if (isScrolled !== scrolled) {
         setScrolled(isScrolled);
       }
@@ -23,13 +23,22 @@ const Header = () => {
   }, [scrolled]);
   
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      scrolled ? "bg-white/95 backdrop-blur-sm shadow-md py-2" : "bg-white py-4"
-    }`}>
+    <header 
+      className={`w-full z-50 transition-all duration-300 ${
+        scrolled 
+        ? "fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-md py-2" 
+        : "relative bg-transparent py-4"
+      }`}
+      style={{
+        backgroundImage: scrolled ? 'none' : 'url("https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2029&auto=format&fit=crop&ixlib=rb-4.0.3")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center">
           <Link to="/" className="flex items-center">
-            <h1 className="text-2xl font-bold text-primary transition-colors duration-300 hover:text-accent">MyClaim</h1>
+            <h1 className={`text-2xl font-bold transition-colors duration-300 hover:text-accent ${scrolled ? 'text-primary' : 'text-white'}`}>MyClaim</h1>
           </Link>
         </div>
         
@@ -37,7 +46,9 @@ const Header = () => {
           <Link 
             to="/" 
             className={`text-sm font-medium transition-all duration-300 hover:text-primary relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full ${
-              location.pathname === "/" ? "text-primary after:w-full" : "text-foreground/80"
+              location.pathname === "/" 
+              ? `${scrolled ? 'text-primary' : 'text-white'} after:w-full` 
+              : `${scrolled ? 'text-foreground/80' : 'text-white/90'}`
             }`}
           >
             Home
@@ -45,7 +56,9 @@ const Header = () => {
           <Link 
             to="/dashboard" 
             className={`text-sm font-medium transition-all duration-300 hover:text-primary relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full ${
-              location.pathname === "/dashboard" ? "text-primary after:w-full" : "text-foreground/80"
+              location.pathname === "/dashboard" 
+              ? `${scrolled ? 'text-primary' : 'text-white'} after:w-full` 
+              : `${scrolled ? 'text-foreground/80' : 'text-white/90'}`
             }`}
           >
             Dashboard
@@ -53,7 +66,9 @@ const Header = () => {
           <Link 
             to="/submit-claim" 
             className={`text-sm font-medium transition-all duration-300 hover:text-primary relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full ${
-              location.pathname === "/submit-claim" ? "text-primary after:w-full" : "text-foreground/80"
+              location.pathname === "/submit-claim" 
+              ? `${scrolled ? 'text-primary' : 'text-white'} after:w-full` 
+              : `${scrolled ? 'text-foreground/80' : 'text-white/90'}`
             }`}
           >
             Submit Claim
@@ -61,7 +76,9 @@ const Header = () => {
           <Link 
             to="/chat" 
             className={`text-sm font-medium transition-all duration-300 hover:text-primary relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full ${
-              location.pathname === "/chat" ? "text-primary after:w-full" : "text-foreground/80"
+              location.pathname === "/chat" 
+              ? `${scrolled ? 'text-primary' : 'text-white'} after:w-full` 
+              : `${scrolled ? 'text-foreground/80' : 'text-white/90'}`
             }`}
           >
             Support Chat
