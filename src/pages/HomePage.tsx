@@ -70,9 +70,9 @@ const HomePage = () => {
                 Submit a Claim
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 hover:scale-105 transition-all duration-300 shadow-lg group text-base px-8 py-6">
+            <Button asChild size="lg" variant="green" className="hover:scale-105 transition-all duration-300 shadow-lg group text-base px-8 py-6">
               <Link to="/dashboard" className="flex items-center">
-                <BarChart3 className="mr-3 h-5 w-5 transition-transform group-hover:text-green-400" />
+                <BarChart3 className="mr-3 h-5 w-5 transition-transform group-hover:text-white" />
                 View Dashboard
               </Link>
             </Button>
