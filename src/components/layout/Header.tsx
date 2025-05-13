@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 const Header = () => {
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const isHomePage = location.pathname === "/";
   
   useEffect(() => {
     const handleScroll = () => {
@@ -26,8 +27,10 @@ const Header = () => {
     <header 
       className={`w-full z-50 fixed transition-all duration-500 ease-in-out ${
         scrolled 
-        ? "bg-white/90 backdrop-blur-sm shadow-md py-2" 
-        : "bg-transparent py-4"
+          ? "bg-white/90 backdrop-blur-sm shadow-md py-2" 
+          : isHomePage 
+            ? "bg-transparent py-4" 
+            : "bg-primary py-4"
       }`}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">

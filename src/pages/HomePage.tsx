@@ -64,7 +64,7 @@ const HomePage = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center gap-6 animate-slide-up">
-            <Button asChild size="lg" className="bg-green-500 text-white hover:bg-green-600 hover:scale-105 transition-all duration-300 shadow-lg group text-base px-8 py-6 border border-green-400">
+            <Button asChild size="lg" variant="green" className="hover:scale-105 transition-all duration-300 shadow-lg group text-base px-8 py-6">
               <Link to="/submit-claim" className="flex items-center">
                 <CircleDot className="mr-3 h-5 w-5 transition-transform group-hover:text-white" />
                 Submit a Claim
@@ -183,7 +183,7 @@ const HomePage = () => {
               <p className="text-muted-foreground mb-6">
                 Submit your claim now and experience our streamlined processing system. Our AI-powered platform will guide you through each step.
               </p>
-              <Button asChild className="w-full bg-green-500 hover:bg-green-600 text-white group hover:scale-[1.02] transition-all duration-300 border border-green-400">
+              <Button asChild variant="green" className="w-full hover:scale-[1.02] transition-all duration-300">
                 <Link to="/submit-claim" className="flex items-center justify-center">
                   Start Your Claim <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
