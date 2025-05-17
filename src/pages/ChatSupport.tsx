@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Send } from "lucide-react";
+import { claimsService } from "@/services/claimsService";
 
 type Message = {
   id: number;
@@ -48,7 +48,7 @@ const ChatSupport = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (inputValue.trim() === "") return;
 
     // Add user message
@@ -63,54 +63,39 @@ const ChatSupport = () => {
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI response after a short delay
-    setTimeout(() => {
-      const botResponses: { [key: string]: string } = {
-        "rejected": "Based on our analysis, the claim was rejected because the damage reported doesn't match the incident description in the police report. Additionally, the photos submitted show pre-existing damage that predates the reported incident. You may appeal this decision by providing additional documentation or evidence.",
-        "approved": "Your claim has been approved based on the documentation provided. The police report and photos clearly matched the incident description, and all policy requirements were met. The payment will be processed within 5-7 business days.",
-        "processing": "Your claim is still being processed. Our AI system is analyzing the documents and photos submitted. We need to verify some details with the appropriate authorities, which is why there's a delay. You should receive an update within 48 hours.",
-        "submitted": "Your claim was recently submitted and is currently in the initial review stage. Our AI system will begin analyzing your documents shortly. The typical processing time is 3-5 business days for similar claims."
-      };
-      
-      let responseContent = "";
-      
-      // If asking about a claim, provide specific response based on claim status
+    try {
+      // Adjust query with claim context if available
+      let queryPrompt = inputValue;
       if (claimId) {
-        const claimNumber = claimId.split('-')[2];
-        const mockStatus = ["approved", "processing", "rejected", "submitted"][parseInt(claimNumber) % 4];
-        
-        if (inputValue.toLowerCase().includes("why") && mockStatus === "rejected") {
-          responseContent = botResponses["rejected"];
-        } else if (inputValue.toLowerCase().includes("status") || inputValue.toLowerCase().includes("update")) {
-          responseContent = botResponses[mockStatus];
-        } else if (inputValue.toLowerCase().includes("repair") || inputValue.toLowerCase().includes("workshop")) {
-          responseContent = "Based on your location and claim details, I recommend these nearby authorized repair workshops:\n\n1. AutoCare Workshop - 3.2km away\n2. SpeedFix Auto Centre - 4.5km away\n3. Master Auto Repair - 5.1km away\n\nWould you like me to provide contact details for any of these?";
-        } else {
-          responseContent = "I understand you're asking about claim " + claimId + ". What specific information would you like to know? You can ask about the claim status, payment details, or repair workshop recommendations.";
-        }
-      } else {
-        // General responses
-        if (inputValue.toLowerCase().includes("hello") || inputValue.toLowerCase().includes("hi")) {
-          responseContent = "Hello! How can I help you with your insurance claim today?";
-        } else if (inputValue.toLowerCase().includes("process")) {
-          responseContent = "The claim process involves submitting your police report and accident photos through our portal. Our AI then analyzes these documents to validate your claim according to Malaysian insurance regulations. You'll be notified once a decision is made.";
-        } else if (inputValue.toLowerCase().includes("document") || inputValue.toLowerCase().includes("need")) {
-          responseContent = "For a complete claim submission, you'll need:\n\n1. Police report\n2. Clear photos of the damage\n3. Your identification document\n4. Insurance policy details\n5. Bank account information for reimbursement";
-        } else {
-          responseContent = "Thank you for your question. Our AI-powered system is designed to provide fast and accurate claim processing. If you have specific questions about claim submission or the status of an existing claim, please let me know.";
-        }
+        queryPrompt = `User is asking about claim ${claimId}: ${inputValue}`;
       }
-
+      
+      // Call the RAG API using claimsService
+      const response = await claimsService.ragQuery(queryPrompt);
+      
       const newBotMessage: Message = {
         id: messages.length + 2,
-        content: responseContent,
+        content: response.answer,
         isUser: false,
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, newBotMessage]);
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      
+      // Fallback message in case of API error
+      const fallbackMessage: Message = {
+        id: messages.length + 2,
+        content: "I apologize, but I'm having trouble connecting to my knowledge base right now. Please try again in a moment.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, fallbackMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

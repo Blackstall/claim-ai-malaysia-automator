@@ -1,0 +1,5 @@
+python==3.11
+scikit-learn==1.3.2
+fastapi 
+dashvector
+uvicorn

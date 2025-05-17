@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Card, 
@@ -15,85 +14,58 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Check, Clock, X, FileText, MessageSquare, ArrowRight, BarChart3, FileCheck } from "lucide-react";
-
-// Sample data for demonstration
-const mockClaims = [
-  { 
-    id: "CL-2023-001", 
-    date: "2023-12-15", 
-    insuranceProvider: "Allianz Malaysia", 
-    status: "approved", 
-    progress: 100,
-    amount: "RM 4,850",
-    description: "Front bumper damage from rear-end collision",
-    policeReport: "KL-89723-2023"
-  },
-  { 
-    id: "CL-2024-002", 
-    date: "2024-01-23", 
-    insuranceProvider: "AXA Affin", 
-    status: "processing", 
-    progress: 70,
-    amount: "RM 2,300 (estimated)",
-    description: "Side mirror and door damage",
-    policeReport: "KL-12489-2024" 
-  },
-  { 
-    id: "CL-2024-003", 
-    date: "2024-03-08", 
-    insuranceProvider: "Etiqa Insurance", 
-    status: "rejected", 
-    progress: 100,
-    amount: "RM 0",
-    description: "Windshield replacement claim",
-    policeReport: "PJ-34567-2024"
-  },
-  { 
-    id: "CL-2024-004", 
-    date: "2024-04-02", 
-    insuranceProvider: "Kurnia Insurance", 
-    status: "submitted", 
-    progress: 30,
-    amount: "RM 1,750 (estimated)",
-    description: "Rear light damage from parking accident",
-    policeReport: "PJ-45612-2024"
-  },
-];
+import { claimsService, Claim } from "@/services/claimsService";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
-  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [claims, setClaims] = useState<Claim[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedClaimId, setSelectedClaimId] = useState<number | null>(null);
   
-  const selectedClaim = mockClaims.find(claim => claim.id === selectedClaimId);
+  // Fetch claims on component mount
+  useEffect(() => {
+    const fetchClaims = async () => {
+      try {
+        setLoading(true);
+        const response = await claimsService.getAllClaims();
+        setClaims(response.results);
+      } catch (error) {
+        console.error("Error fetching claims:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch claims. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClaims();
+  }, [toast]);
   
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'approved':
-        return <Badge className="bg-green-500">Approved</Badge>;
-      case 'processing':
-        return <Badge className="bg-blue-500">Processing</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive">Rejected</Badge>;
-      case 'submitted':
-        return <Badge variant="outline">Submitted</Badge>;
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
-    }
+  const selectedClaim = claims.find(claim => claim.id === selectedClaimId);
+  
+  // Count claims by status
+  const approvedClaims = claims.filter(claim => claim.approval_flag).length;
+  const processingClaims = claims.filter(claim => !claim.approval_flag).length;
+  
+  const getStatusBadge = (isApproved: boolean) => {
+    return isApproved 
+      ? <Badge className="bg-green-500">Approved</Badge>
+      : <Badge variant="destructive">Not Approved</Badge>;
   };
   
-  const getStatusIcon = (status: string) => {
-    switch(status) {
-      case 'approved':
-        return <Check className="h-5 w-5 text-green-500" />;
-      case 'processing':
-        return <Clock className="h-5 w-5 text-blue-500" />;
-      case 'rejected':
-        return <X className="h-5 w-5 text-destructive" />;
-      case 'submitted':
-        return <FileText className="h-5 w-5 text-gray-500" />;
-      default:
-        return null;
-    }
+  const getStatusIcon = (isApproved: boolean) => {
+    return isApproved 
+      ? <Check className="h-5 w-5 text-green-500" />
+      : <X className="h-5 w-5 text-destructive" />;
   };
+
+  if (loading) {
+    return <div className="container mx-auto px-4 py-12">Loading claims...</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -113,7 +85,7 @@ const Dashboard = () => {
         </Button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-green-50 border-green-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -123,20 +95,7 @@ const Dashboard = () => {
             <CardDescription>Claims that have been approved</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">1</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-600" />
-              In Progress
-            </CardTitle>
-            <CardDescription>Claims being processed</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-600">2</div>
+            <div className="text-3xl font-bold text-green-600">{approvedClaims}</div>
           </CardContent>
         </Card>
         
@@ -144,12 +103,12 @@ const Dashboard = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <X className="h-5 w-5 text-red-600" />
-              Rejected Claims
+              Not Approved Claims
             </CardTitle>
-            <CardDescription>Claims that were rejected</CardDescription>
+            <CardDescription>Claims that were not approved</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">1</div>
+            <div className="text-3xl font-bold text-red-600">{processingClaims}</div>
           </CardContent>
         </Card>
       </div>
@@ -164,12 +123,11 @@ const Dashboard = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="all">All Claims</TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
-            <TabsTrigger value="processing">Processing</TabsTrigger>
-            <TabsTrigger value="rejected">Rejected</TabsTrigger>
+            <TabsTrigger value="not-approved">Not Approved</TabsTrigger>
           </TabsList>
           
           <TabsContent value="all" className="space-y-4">
-            {mockClaims.map((claim) => (
+            {claims.length > 0 ? claims.map((claim) => (
               <Card 
                 key={claim.id} 
                 className={`cursor-pointer hover:border-primary transition ${
@@ -181,23 +139,19 @@ const Dashboard = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle className="text-lg flex items-center gap-2">
-                        {getStatusIcon(claim.status)} {claim.id}
+                        {getStatusIcon(claim.approval_flag)} Claim ID: {claim.id}
                       </CardTitle>
                       <CardDescription>
-                        Filed on {claim.date} • {claim.insuranceProvider}
+                        {new Date(claim.created_at || '').toLocaleDateString()} • IC: {claim.ic_number}
                       </CardDescription>
                     </div>
-                    {getStatusBadge(claim.status)}
+                    {getStatusBadge(claim.approval_flag)}
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-medium">{claim.progress}%</span>
-                    </div>
-                    <Progress value={claim.progress} className="h-2" />
-                    <p className="mt-2">{claim.description}</p>
+                    <p className="mt-2">Vehicle: {claim.vehicle_make} ({claim.vehicle_age_years} years old)</p>
+                    <p className="mt-2">Damage: {claim.claim_description.substring(0, 100)}...</p>
                   </div>
                 </CardContent>
                 
@@ -206,12 +160,20 @@ const Dashboard = () => {
                     <div className="px-6 py-2 border-t">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className="text-muted-foreground">Police Report</p>
-                          <p className="font-medium">{claim.policeReport}</p>
+                          <p className="text-muted-foreground">Reported to Police</p>
+                          <p className="font-medium">{claim.claim_reported_to_police_flag ? "Yes" : "No"}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Claim Amount</p>
-                          <p className="font-medium">{claim.amount}</p>
+                          <p className="font-medium">RM {claim.repair_amount}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Policy Expired</p>
+                          <p className="font-medium">{claim.policy_expired_flag ? "Yes" : "No"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">At Fault</p>
+                          <p className="font-medium">{claim.at_fault_flag ? "Yes" : "No"}</p>
                         </div>
                       </div>
                     </div>
@@ -219,7 +181,7 @@ const Dashboard = () => {
                     <CardFooter className="flex justify-between border-t pt-4">
                       <Button variant="outline" size="sm" className="text-xs">
                         <FileText className="h-3 w-3 mr-1" /> 
-                        View Documents
+                        View Details
                       </Button>
                       
                       <Button size="sm" className="text-xs" asChild>
@@ -232,80 +194,62 @@ const Dashboard = () => {
                   </>
                 )}
               </Card>
-            ))}
+            )) : (
+              <Card>
+                <CardContent className="py-8 text-center">
+                  <p className="text-muted-foreground">No claims found. Submit your first claim!</p>
+                  <Button asChild className="mt-4">
+                    <Link to="/submit-claim">Submit Claim</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
           
           <TabsContent value="approved" className="space-y-4">
-            {mockClaims
-              .filter(claim => claim.status === 'approved')
+            {claims
+              .filter(claim => claim.approval_flag)
               .map((claim) => (
                 <Card key={claim.id}>
                   <CardHeader>
                     <div className="flex justify-between">
-                      <CardTitle>{claim.id}</CardTitle>
-                      {getStatusBadge(claim.status)}
+                      <CardTitle>Claim ID: {claim.id}</CardTitle>
+                      {getStatusBadge(claim.approval_flag)}
                     </div>
                     <CardDescription>
-                      Filed on {claim.date} • {claim.insuranceProvider}
+                      {new Date(claim.created_at || '').toLocaleDateString()} • IC: {claim.ic_number}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p>{claim.description}</p>
-                    <p className="mt-2 font-semibold">Approved amount: {claim.amount}</p>
+                    <p>Vehicle: {claim.vehicle_make}</p>
+                    <p className="mt-2">{claim.claim_description}</p>
+                    <p className="mt-2 font-semibold">Approved amount: RM {claim.repair_amount}</p>
                   </CardContent>
                 </Card>
               ))}
           </TabsContent>
           
-          <TabsContent value="processing" className="space-y-4">
-            {mockClaims
-              .filter(claim => claim.status === 'processing' || claim.status === 'submitted')
+          <TabsContent value="not-approved" className="space-y-4">
+            {claims
+              .filter(claim => !claim.approval_flag)
               .map((claim) => (
                 <Card key={claim.id}>
                   <CardHeader>
                     <div className="flex justify-between">
-                      <CardTitle>{claim.id}</CardTitle>
-                      {getStatusBadge(claim.status)}
+                      <CardTitle>Claim ID: {claim.id}</CardTitle>
+                      {getStatusBadge(claim.approval_flag)}
                     </div>
                     <CardDescription>
-                      Filed on {claim.date} • {claim.insuranceProvider}
+                      {new Date(claim.created_at || '').toLocaleDateString()} • IC: {claim.ic_number}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">{claim.progress}%</span>
-                      </div>
-                      <Progress value={claim.progress} className="h-2" />
-                      <p className="mt-2">{claim.description}</p>
-                      <p className="font-semibold">Estimated amount: {claim.amount}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-          </TabsContent>
-          
-          <TabsContent value="rejected" className="space-y-4">
-            {mockClaims
-              .filter(claim => claim.status === 'rejected')
-              .map((claim) => (
-                <Card key={claim.id}>
-                  <CardHeader>
-                    <div className="flex justify-between">
-                      <CardTitle>{claim.id}</CardTitle>
-                      {getStatusBadge(claim.status)}
-                    </div>
-                    <CardDescription>
-                      Filed on {claim.date} • {claim.insuranceProvider}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p>{claim.description}</p>
+                    <p>Vehicle: {claim.vehicle_make}</p>
+                    <p className="mt-2">{claim.claim_description}</p>
                     <Button size="sm" className="mt-4 bg-gradient-to-r from-primary to-accent hover:scale-105 transition-all duration-300" asChild>
                       <Link to={`/chat?claim=${claim.id}`} className="flex items-center">
                         <MessageSquare className="mr-2 h-4 w-4" />
-                        Ask Why This Was Rejected <ArrowRight className="ml-2 h-4 w-4" />
+                        Ask Why This Was Not Approved <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
                   </CardContent>
