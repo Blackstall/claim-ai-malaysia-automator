@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,8 +11,9 @@ interface RagResponse {
 
 // Export the Claim interface so it can be imported elsewhere
 export interface Claim {
-  id: number | string;
+  id: string | number;
   ic_number: string;
+  plate_number: string;
   age: number;
   months_as_customer: number;
   vehicle_age_years: number;
@@ -111,7 +111,7 @@ export const claimsService = {
       if (error) {
         console.error('Supabase error:', error);
         // Fallback to FastAPI if Supabase fails
-        return fallbackToFastApi(page, search);
+        return fallbackToFastAPI(page, search);
       }
       
       // Transform to match our interface
@@ -126,12 +126,12 @@ export const claimsService = {
     } catch (error) {
       console.error('Error fetching claims from Supabase:', error);
       // Fallback to FastAPI
-      return fallbackToFastApi(page, search);
+      return fallbackToFastAPI(page, search);
     }
   },
   
   // Fallback function to get claims from FastAPI
-  fallbackToFastApi: async (page = 1, search?: string): Promise<PaginatedResponse> => {
+  fallbackToFastAPI: async (page = 1, search?: string): Promise<PaginatedResponse> => {
     try {
       console.log("Falling back to FastAPI...");
       let url = `${API_URL}/claims/api/claims/?page=${page}`;
@@ -152,7 +152,7 @@ export const claimsService = {
       const { data, error } = await supabase
         .from('claims')
         .select('*')
-        .eq('id', id)
+        .eq('id', id.toString())
         .single();
       
       if (error) {
@@ -199,7 +199,7 @@ export const claimsService = {
       if (error) {
         console.error('Supabase error:', error);
         // Fallback to FastAPI if Supabase fails
-        return fallbackCreateClaim(claim as any);
+        return fallbackCreateClaim(claim);
       }
       
       console.log('Supabase response:', data);
@@ -207,12 +207,12 @@ export const claimsService = {
     } catch (error) {
       console.error('Error creating claim in Supabase:', error);
       // Fallback to FastAPI
-      return fallbackCreateClaim(claim as any);
+      return fallbackCreateClaim(claim);
     }
   },
   
   // Fallback function to create claim in FastAPI
-  fallbackCreateClaim: async (claim: Claim): Promise<Claim> => {
+  fallbackCreateClaim: async (claim: Omit<Claim, 'id'>): Promise<Claim> => {
     try {
       console.log("Falling back to FastAPI for claim creation...");
       const csrfToken = getCookie('csrftoken');
@@ -344,4 +344,4 @@ export const claimsService = {
       throw new Error("Server health check failed");
     }
   }
-}; 
+};

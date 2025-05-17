@@ -21,7 +21,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedClaimId, setSelectedClaimId] = useState<number | null>(null);
+  const [selectedClaimId, setSelectedClaimId] = useState<string | number | null>(null);
   
   // Fetch claims on component mount
   useEffect(() => {
@@ -45,6 +45,7 @@ const Dashboard = () => {
     fetchClaims();
   }, [toast]);
   
+  // Find the selected claim
   const selectedClaim = claims.find(claim => claim.id === selectedClaimId);
   
   // Count claims by status
