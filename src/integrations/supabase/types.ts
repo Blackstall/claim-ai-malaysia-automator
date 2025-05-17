@@ -9,7 +9,87 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      claims: {
+        Row: {
+          age: number
+          approval_flag: boolean
+          at_fault_flag: boolean
+          claim_description: string
+          claim_reported_to_police_flag: boolean
+          coverage_amount: number
+          created_at: string
+          customer_background: string
+          damage_severity_score: number
+          deductible_amount: number
+          ic_number: string
+          id: string
+          license_type_missing_flag: boolean
+          market_value: number
+          months_as_customer: number
+          num_third_parties: number
+          num_witnesses: number
+          plate_number: string
+          policy_expired_flag: boolean
+          repair_amount: number
+          time_to_report_days: number
+          updated_at: string
+          vehicle_age_years: number
+          vehicle_make: string
+        }
+        Insert: {
+          age: number
+          approval_flag?: boolean
+          at_fault_flag?: boolean
+          claim_description: string
+          claim_reported_to_police_flag?: boolean
+          coverage_amount?: number
+          created_at?: string
+          customer_background: string
+          damage_severity_score?: number
+          deductible_amount?: number
+          ic_number: string
+          id?: string
+          license_type_missing_flag?: boolean
+          market_value?: number
+          months_as_customer: number
+          num_third_parties?: number
+          num_witnesses?: number
+          plate_number: string
+          policy_expired_flag?: boolean
+          repair_amount?: number
+          time_to_report_days?: number
+          updated_at?: string
+          vehicle_age_years: number
+          vehicle_make: string
+        }
+        Update: {
+          age?: number
+          approval_flag?: boolean
+          at_fault_flag?: boolean
+          claim_description?: string
+          claim_reported_to_police_flag?: boolean
+          coverage_amount?: number
+          created_at?: string
+          customer_background?: string
+          damage_severity_score?: number
+          deductible_amount?: number
+          ic_number?: string
+          id?: string
+          license_type_missing_flag?: boolean
+          market_value?: number
+          months_as_customer?: number
+          num_third_parties?: number
+          num_witnesses?: number
+          plate_number?: string
+          policy_expired_flag?: boolean
+          repair_amount?: number
+          time_to_report_days?: number
+          updated_at?: string
+          vehicle_age_years?: number
+          vehicle_make?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
