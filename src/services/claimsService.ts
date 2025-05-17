@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -87,49 +88,6 @@ export const claimsService = {
     }
   },
 
-  // Get all claims - now using Supabase for Dashboard
-  getAllClaims: async (page = 1, search?: string): Promise<PaginatedResponse> => {
-    try {
-      console.log("Fetching claims from Supabase...");
-      
-      let query = supabase.from('claims').select('*');
-      
-      if (search) {
-        query = query.or(`ic_number.ilike.%${search}%,vehicle_make.ilike.%${search}%,claim_description.ilike.%${search}%`);
-      }
-      
-      // Basic pagination
-      const pageSize = 10;
-      const from = (page - 1) * pageSize;
-      const to = page * pageSize - 1;
-      
-      const { data, error, count } = await query
-        .order('created_at', { ascending: false })
-        .range(from, to)
-        .select('*', { count: 'exact' });
-      
-      if (error) {
-        console.error('Supabase error:', error);
-        // Fallback to FastAPI if Supabase fails
-        return fallbackToFastAPI(page, search);
-      }
-      
-      // Transform to match our interface
-      const results = data as unknown as Claim[];
-      
-      return {
-        count: count || results.length,
-        next: count && from + pageSize < count ? `/claims?page=${page + 1}` : null,
-        previous: page > 1 ? `/claims?page=${page - 1}` : null,
-        results
-      };
-    } catch (error) {
-      console.error('Error fetching claims from Supabase:', error);
-      // Fallback to FastAPI
-      return fallbackToFastAPI(page, search);
-    }
-  },
-  
   // Fallback function to get claims from FastAPI
   fallbackToFastAPI: async (page = 1, search?: string): Promise<PaginatedResponse> => {
     try {
@@ -146,33 +104,158 @@ export const claimsService = {
     }
   },
 
-  // Get claim by ID - now using Supabase for Dashboard
-  getClaimById: async (id: number | string): Promise<Claim> => {
+  // Get all claims - now using dummy data for Dashboard
+  getAllClaims: async (page = 1): Promise<PaginatedResponse> => {
     try {
-      const { data, error } = await supabase
-        .from('claims')
-        .select('*')
-        .eq('id', id.toString())
-        .single();
+      console.log("Using dummy data for claims...");
       
-      if (error) {
-        console.error('Supabase error:', error);
-        // Fallback to FastAPI if Supabase fails
-        return fallbackGetClaimById(id);
-      }
+      // Dummy data for claims
+      const dummyData: Claim[] = [
+        {
+          id: "1",
+          ic_number: "IC12345678",
+          plate_number: "ABC1234",
+          vehicle_make: "Toyota Camry",
+          vehicle_age_years: 5,
+          claim_description: "Front bumper damage due to collision with another vehicle at traffic light. The other driver ran a red light and crashed into my car.",
+          repair_amount: 3500,
+          approval_flag: true,
+          claim_reported_to_police_flag: true,
+          policy_expired_flag: false,
+          at_fault_flag: false,
+          age: 35,
+          months_as_customer: 24,
+          deductible_amount: 500,
+          market_value: 42000,
+          damage_severity_score: 7,
+          time_to_report_days: 1,
+          license_type_missing_flag: false,
+          num_third_parties: 1,
+          num_witnesses: 2,
+          coverage_amount: 50000,
+          customer_background: "Long-term customer with clean driving record",
+          created_at: "2025-04-10T09:00:00Z"
+        },
+        {
+          id: "2",
+          ic_number: "IC98765432",
+          plate_number: "XYZ9876",
+          vehicle_make: "Honda Civic",
+          vehicle_age_years: 2,
+          claim_description: "Side mirror broken and door dented while parked at shopping mall. Appears to be hit-and-run incident.",
+          repair_amount: 1200,
+          approval_flag: false,
+          claim_reported_to_police_flag: false,
+          policy_expired_flag: false,
+          at_fault_flag: false,
+          age: 28,
+          months_as_customer: 14,
+          deductible_amount: 300,
+          market_value: 32000,
+          damage_severity_score: 4,
+          time_to_report_days: 3,
+          license_type_missing_flag: false,
+          num_third_parties: 0,
+          num_witnesses: 0,
+          coverage_amount: 35000,
+          customer_background: "No previous claims history",
+          created_at: "2025-05-02T14:30:00Z"
+        },
+        {
+          id: "3",
+          ic_number: "IC45678901",
+          plate_number: "DEF4567",
+          vehicle_make: "BMW 3 Series",
+          vehicle_age_years: 1,
+          claim_description: "Windshield cracked due to falling tree branch during heavy storm. Need full replacement of front windshield.",
+          repair_amount: 2800,
+          approval_flag: true,
+          claim_reported_to_police_flag: false,
+          policy_expired_flag: false,
+          at_fault_flag: false,
+          age: 45,
+          months_as_customer: 36,
+          deductible_amount: 1000,
+          market_value: 85000,
+          damage_severity_score: 5,
+          time_to_report_days: 1,
+          license_type_missing_flag: false,
+          num_third_parties: 0,
+          num_witnesses: 0,
+          coverage_amount: 100000,
+          customer_background: "Premium policy holder with multiple vehicles insured",
+          created_at: "2025-05-10T11:15:00Z"
+        },
+        {
+          id: "4",
+          ic_number: "IC56789012",
+          plate_number: "GHI7890",
+          vehicle_make: "Mercedes C-Class",
+          vehicle_age_years: 3,
+          claim_description: "Rear bumper and tail light damaged in parking lot collision. Other driver admitted fault and provided contact details.",
+          repair_amount: 4200,
+          approval_flag: false,
+          claim_reported_to_police_flag: true,
+          policy_expired_flag: true, // Policy expired
+          at_fault_flag: false,
+          age: 52,
+          months_as_customer: 18,
+          deductible_amount: 750,
+          market_value: 65000,
+          damage_severity_score: 6,
+          time_to_report_days: 2,
+          license_type_missing_flag: false,
+          num_third_parties: 1,
+          num_witnesses: 0,
+          coverage_amount: 75000,
+          customer_background: "Recently renewed policy after expiration",
+          created_at: "2025-05-12T16:45:00Z"
+        },
+        {
+          id: "5",
+          ic_number: "IC34567890",
+          plate_number: "JKL2345",
+          vehicle_make: "Audi A4",
+          vehicle_age_years: 4,
+          claim_description: "Engine failure while driving on highway. Vehicle had to be towed to service center. Mechanical inspection shows major internal damage.",
+          repair_amount: 8500,
+          approval_flag: false,
+          claim_reported_to_police_flag: false,
+          policy_expired_flag: false,
+          at_fault_flag: true, // At fault claim
+          age: 33,
+          months_as_customer: 24,
+          deductible_amount: 1000,
+          market_value: 60000,
+          damage_severity_score: 9,
+          time_to_report_days: 1,
+          license_type_missing_flag: false,
+          num_third_parties: 0,
+          num_witnesses: 1,
+          coverage_amount: 70000,
+          customer_background: "Previous minor claims for cosmetic damage",
+          created_at: "2025-05-15T08:20:00Z"
+        }
+      ];
       
-      if (!data) {
-        throw new Error(`Claim with ID ${id} not found in Supabase`);
-      }
+      // Simple pagination
+      const pageSize = 10;
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedClaims = dummyData.slice(startIndex, endIndex);
       
-      return data as unknown as Claim;
+      return {
+        count: dummyData.length,
+        next: endIndex < dummyData.length ? `/claims?page=${page + 1}` : null,
+        previous: page > 1 ? `/claims?page=${page - 1}` : null,
+        results: paginatedClaims
+      };
     } catch (error) {
-      console.error(`Error fetching claim #${id} from Supabase:`, error);
-      // Fallback to FastAPI
-      return fallbackGetClaimById(id);
+      console.error('Error fetching dummy claims:', error);
+      return this.fallbackToFastAPI(page);
     }
   },
-  
+
   // Fallback function to get claim by ID from FastAPI
   fallbackGetClaimById: async (id: number | string): Promise<Claim> => {
     try {
@@ -185,29 +268,22 @@ export const claimsService = {
     }
   },
 
-  // Create a new claim - now using Supabase for SubmitClaim
-  createClaim: async (claim: Omit<Claim, 'id'>): Promise<Claim> => {
+  // Get claim by ID - now using dummy data
+  getClaimById: async (id: number | string): Promise<Claim> => {
     try {
-      console.log('Creating new claim in Supabase:', claim);
+      // First, try to find in our dummy data
+      const dummyClaims = (await this.getAllClaims()).results;
+      const claim = dummyClaims.find(c => c.id.toString() === id.toString());
       
-      const { data, error } = await supabase
-        .from('claims')
-        .insert([claim])
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Supabase error:', error);
-        // Fallback to FastAPI if Supabase fails
-        return fallbackCreateClaim(claim);
+      if (claim) {
+        return claim;
       }
       
-      console.log('Supabase response:', data);
-      return data as unknown as Claim;
+      // If not found in dummy data, try FastAPI
+      return this.fallbackGetClaimById(id);
     } catch (error) {
-      console.error('Error creating claim in Supabase:', error);
-      // Fallback to FastAPI
-      return fallbackCreateClaim(claim);
+      console.error(`Error fetching claim #${id}:`, error);
+      return this.fallbackGetClaimById(id);
     }
   },
   
@@ -264,6 +340,29 @@ export const claimsService = {
     }
   },
   
+  // Create a new claim - mock implementation
+  createClaim: async (claim: Omit<Claim, 'id'>): Promise<Claim> => {
+    try {
+      console.log('Creating new claim:', claim);
+      
+      // Generate a random ID for the dummy claim
+      const newId = Math.floor(Math.random() * 10000).toString();
+      const newClaim = { 
+        ...claim, 
+        id: newId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      // In a real app, you'd insert into Supabase here
+      console.log('Created new claim with ID:', newId);
+      return newClaim;
+    } catch (error) {
+      console.error('Error creating claim:', error);
+      return this.fallbackCreateClaim(claim);
+    }
+  },
+  
   // Update a claim
   updateClaim: async (id: number, claim: Claim): Promise<Claim> => {
     const response = await axios.put(`${API_URL}/claims/api/claims/${id}/`, claim);
@@ -273,63 +372,6 @@ export const claimsService = {
   // Delete a claim
   deleteClaim: async (id: number): Promise<void> => {
     await axios.delete(`${API_URL}/claims/api/claims/${id}/`);
-  },
-  
-  // Filter claims by damage score
-  filterByDamageScore: async (minScore?: number, maxScore?: number): Promise<Claim[]> => {
-    let url = `${API_URL}/claims/api/claims/filter_by_damage_score/`;
-    if (minScore !== undefined || maxScore !== undefined) {
-      url += '?';
-      if (minScore !== undefined) url += `min_score=${minScore}`;
-      if (minScore !== undefined && maxScore !== undefined) url += '&';
-      if (maxScore !== undefined) url += `max_score=${maxScore}`;
-    }
-    const response = await axios.get(url);
-    return response.data;
-  },
-  
-  // Filter claims by repair amount
-  filterByRepairAmount: async (minAmount?: number, maxAmount?: number): Promise<Claim[]> => {
-    let url = `${API_URL}/claims/api/claims/filter_by_repair_amount/`;
-    if (minAmount !== undefined || maxAmount !== undefined) {
-      url += '?';
-      if (minAmount !== undefined) url += `min_amount=${minAmount}`;
-      if (minAmount !== undefined && maxAmount !== undefined) url += '&';
-      if (maxAmount !== undefined) url += `max_amount=${maxAmount}`;
-    }
-    const response = await axios.get(url);
-    return response.data;
-  },
-  
-  // Search claims
-  searchClaims: async (query: string): Promise<ClaimsResponse> => {
-    const response = await axios.get(`${API_URL}/claims/api/claims/?search=${query}`);
-    return response.data;
-  },
-  
-  // Predict claim approval (converted from FastAPI)
-  predictClaim: async (data: PredictionInput): Promise<PredictionResponse> => {
-    try {
-      const csrfToken = getCookie('csrftoken');
-      
-      const response = await apiClient.post('api/predict/', data, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
-        },
-      });
-      
-      return response.data;
-    } catch (error: any) {
-      console.error('Prediction API error:', error);
-      
-      if (error.response) {
-        console.error('Error status:', error.response.status);
-        console.error('Error data:', error.response.data);
-      }
-      
-      throw error;
-    }
   },
 
   // Health check

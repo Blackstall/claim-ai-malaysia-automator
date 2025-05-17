@@ -14,11 +14,16 @@ type Message = {
   timestamp: Date;
 };
 
-// Dummy responses for specific claim rejection reasons
-const rejectionResponses = {
+// Dummy responses for specific claim reasons
+const claimResponses = {
+  // Rejection responses
   '2': "Thank you for your inquiry about Claim ID: 2. This claim was not approved because there was no police report filed for the incident. For damage claims in public locations like shopping malls, our policy requires a police report to be filed within 24 hours of discovering the damage. Without official documentation, we cannot verify the circumstances of the incident.",
   '4': "Regarding your Claim ID: 4, our records indicate that your insurance policy had expired at the time of the incident. According to our terms, coverage is only valid for incidents that occur during the active policy period. The incident date (May 12, 2025) falls after your policy expiration date (May 1, 2025). We recommend renewing your policy as soon as possible to ensure continuous coverage.",
-  '5': "For Claim ID: 5, your claim was not approved because our assessment determined it was an at-fault incident involving mechanical failure. Your policy specifically excludes coverage for engine damage resulting from lack of maintenance or wear and tear. The inspection report indicates that the engine failure was due to inadequate oil levels and delayed regular maintenance, which are considered owner responsibilities under your policy terms."
+  '5': "For Claim ID: 5, your claim was not approved because our assessment determined it was an at-fault incident involving mechanical failure. Your policy specifically excludes coverage for engine damage resulting from lack of maintenance or wear and tear. The inspection report indicates that the engine failure was due to inadequate oil levels and delayed regular maintenance, which are considered owner responsibilities under your policy terms.",
+  
+  // Approved claim responses
+  '1': "Regarding your approved Claim ID: 1, we're happy to inform you that your claim for front bumper damage has been fully processed. Your repair amount of RM3500 has been approved based on the police report and damage assessment. The repair facility has been authorized to proceed with the work, and you should be contacted within 48 hours to schedule the repairs. Your deductible of RM500 will be collected by the repair facility.",
+  '3': "For your approved Claim ID: 3, the windshield replacement claim has been processed successfully. The full replacement cost of RM2800 has been approved as this type of damage is fully covered under your comprehensive policy. Since this is a no-fault claim due to a natural event (falling tree branch during storm), no deductible applies in this case. You can schedule the replacement at any of our partner service centers at your convenience."
 };
 
 // Generic responses for non-claim specific questions
@@ -88,10 +93,14 @@ const ChatSupport = () => {
         inputValue.toLowerCase().includes("why") ||
         inputValue.toLowerCase().includes("rejected") ||
         inputValue.toLowerCase().includes("not approved") ||
-        inputValue.toLowerCase().includes("declined")
+        inputValue.toLowerCase().includes("declined") ||
+        inputValue.toLowerCase().includes("approved") ||
+        inputValue.toLowerCase().includes("status") ||
+        inputValue.toLowerCase().includes("details") ||
+        inputValue.toLowerCase().includes("about")
       )) {
-        // Return specific rejection reason if available
-        responseContent = rejectionResponses[claimId as keyof typeof rejectionResponses] || 
+        // Return specific claim information if available
+        responseContent = claimResponses[claimId as keyof typeof claimResponses] || 
           "We're reviewing the specific details of your claim. Our claims adjuster will contact you shortly with more information.";
       } else {
         // For other questions, choose a generic response
