@@ -14,43 +14,121 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Check, Clock, X, FileText, MessageSquare, ArrowRight, BarChart3, FileCheck } from "lucide-react";
-import { claimsService, Claim } from "@/services/claimsService";
 import { useToast } from "@/hooks/use-toast";
+
+// Dummy claim data interface
+interface Claim {
+  id: string;
+  ic_number: string;
+  plate_number: string;
+  vehicle_make: string;
+  vehicle_age_years: number;
+  claim_description: string;
+  repair_amount: number;
+  approval_flag: boolean;
+  claim_reported_to_police_flag: boolean;
+  policy_expired_flag: boolean;
+  at_fault_flag: boolean;
+  created_at: string;
+}
 
 const Dashboard = () => {
   const { toast } = useToast();
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedClaimId, setSelectedClaimId] = useState<string | number | null>(null);
+  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   
-  // Fetch claims on component mount
+  // Use dummy data instead of API calls
   useEffect(() => {
-    const fetchClaims = async () => {
-      try {
-        setLoading(true);
-        const response = await claimsService.getAllClaims();
-        setClaims(response.results);
-      } catch (error) {
-        console.error("Error fetching claims:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch claims. Please try again later.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchClaims();
-  }, [toast]);
+    // Simulate API loading delay
+    const loadDummyData = setTimeout(() => {
+      // Dummy data for claims
+      const dummyData: Claim[] = [
+        {
+          id: "1",
+          ic_number: "IC12345678",
+          plate_number: "ABC1234",
+          vehicle_make: "Toyota Camry",
+          vehicle_age_years: 5,
+          claim_description: "Front bumper damage due to collision with another vehicle at traffic light. The other driver ran a red light and crashed into my car.",
+          repair_amount: 3500,
+          approval_flag: true,
+          claim_reported_to_police_flag: true,
+          policy_expired_flag: false,
+          at_fault_flag: false,
+          created_at: "2025-04-10T09:00:00Z"
+        },
+        {
+          id: "2",
+          ic_number: "IC98765432",
+          plate_number: "XYZ9876",
+          vehicle_make: "Honda Civic",
+          vehicle_age_years: 2,
+          claim_description: "Side mirror broken and door dented while parked at shopping mall. Appears to be hit-and-run incident.",
+          repair_amount: 1200,
+          approval_flag: false,
+          claim_reported_to_police_flag: false,
+          policy_expired_flag: false,
+          at_fault_flag: false,
+          created_at: "2025-05-02T14:30:00Z"
+        },
+        {
+          id: "3",
+          ic_number: "IC45678901",
+          plate_number: "DEF4567",
+          vehicle_make: "BMW 3 Series",
+          vehicle_age_years: 1,
+          claim_description: "Windshield cracked due to falling tree branch during heavy storm. Need full replacement of front windshield.",
+          repair_amount: 2800,
+          approval_flag: true,
+          claim_reported_to_police_flag: false,
+          policy_expired_flag: false,
+          at_fault_flag: false,
+          created_at: "2025-05-10T11:15:00Z"
+        },
+        {
+          id: "4",
+          ic_number: "IC56789012",
+          plate_number: "GHI7890",
+          vehicle_make: "Mercedes C-Class",
+          vehicle_age_years: 3,
+          claim_description: "Rear bumper and tail light damaged in parking lot collision. Other driver admitted fault and provided contact details.",
+          repair_amount: 4200,
+          approval_flag: false,
+          claim_reported_to_police_flag: true,
+          policy_expired_flag: true, // Policy expired
+          at_fault_flag: false,
+          created_at: "2025-05-12T16:45:00Z"
+        },
+        {
+          id: "5",
+          ic_number: "IC34567890",
+          plate_number: "JKL2345",
+          vehicle_make: "Audi A4",
+          vehicle_age_years: 4,
+          claim_description: "Engine failure while driving on highway. Vehicle had to be towed to service center. Mechanical inspection shows major internal damage.",
+          repair_amount: 8500,
+          approval_flag: false,
+          claim_reported_to_police_flag: false,
+          policy_expired_flag: false,
+          at_fault_flag: true, // At fault claim
+          created_at: "2025-05-15T08:20:00Z"
+        }
+      ];
+      
+      setClaims(dummyData);
+      setLoading(false);
+    }, 800);
+    
+    return () => clearTimeout(loadDummyData);
+  }, []);
   
   // Find the selected claim
   const selectedClaim = claims.find(claim => claim.id === selectedClaimId);
   
   // Count claims by status
   const approvedClaims = claims.filter(claim => claim.approval_flag).length;
-  const processingClaims = claims.filter(claim => !claim.approval_flag).length;
+  const notApprovedClaims = claims.filter(claim => !claim.approval_flag).length;
   
   const getStatusBadge = (isApproved: boolean) => {
     return isApproved 
@@ -109,7 +187,7 @@ const Dashboard = () => {
             <CardDescription>Claims that were not approved</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">{processingClaims}</div>
+            <div className="text-3xl font-bold text-red-600">{notApprovedClaims}</div>
           </CardContent>
         </Card>
       </div>
@@ -143,7 +221,7 @@ const Dashboard = () => {
                         {getStatusIcon(claim.approval_flag)} Claim ID: {claim.id}
                       </CardTitle>
                       <CardDescription>
-                        {new Date(claim.created_at || '').toLocaleDateString()} • IC: {claim.ic_number}
+                        {new Date(claim.created_at || '').toLocaleDateString()} • Plate Number: {claim.plate_number}
                       </CardDescription>
                     </div>
                     {getStatusBadge(claim.approval_flag)}
@@ -185,12 +263,14 @@ const Dashboard = () => {
                         View Details
                       </Button>
                       
-                      <Button size="sm" className="text-xs" asChild>
-                        <Link to={`/chat?claim=${claim.id}`}>
-                          <MessageSquare className="h-3 w-3 mr-1" /> 
-                          Ask about this claim
-                        </Link>
-                      </Button>
+                      {!claim.approval_flag && (
+                        <Button size="sm" className="text-xs bg-primary" asChild>
+                          <Link to={`/chat?claim=${claim.id}`}>
+                            <MessageSquare className="h-3 w-3 mr-1" /> 
+                            Ask why this was rejected
+                          </Link>
+                        </Button>
+                      )}
                     </CardFooter>
                   </>
                 )}
@@ -218,7 +298,7 @@ const Dashboard = () => {
                       {getStatusBadge(claim.approval_flag)}
                     </div>
                     <CardDescription>
-                      {new Date(claim.created_at || '').toLocaleDateString()} • IC: {claim.ic_number}
+                      {new Date(claim.created_at || '').toLocaleDateString()} • Plate Number: {claim.plate_number}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -241,18 +321,23 @@ const Dashboard = () => {
                       {getStatusBadge(claim.approval_flag)}
                     </div>
                     <CardDescription>
-                      {new Date(claim.created_at || '').toLocaleDateString()} • IC: {claim.ic_number}
+                      {new Date(claim.created_at || '').toLocaleDateString()} • Plate Number: {claim.plate_number}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p>Vehicle: {claim.vehicle_make}</p>
                     <p className="mt-2">{claim.claim_description}</p>
-                    <Button size="sm" className="mt-4 bg-gradient-to-r from-primary to-accent hover:scale-105 transition-all duration-300" asChild>
-                      <Link to={`/chat?claim=${claim.id}`} className="flex items-center">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Ask Why This Was Not Approved <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
+                    <div className="mt-4">
+                      <Badge variant="outline" className="mb-3 text-red-500 border-red-300 bg-red-50">
+                        {claim.policy_expired_flag ? "Policy Expired" : claim.at_fault_flag ? "At-Fault Claim" : "Claim Requires Review"}
+                      </Badge>
+                      <Button size="sm" className="w-full bg-gradient-to-r from-primary to-accent hover:scale-105 transition-all duration-300" asChild>
+                        <Link to={`/chat?claim=${claim.id}`} className="flex items-center justify-center">
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Ask Why This Was Not Approved <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
