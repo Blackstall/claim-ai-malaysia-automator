@@ -1,28 +1,15 @@
 import axios from 'axios';
 
-// Update API URL to match Django backend port (8000 by default)
-const API_URL = 'http://localhost:8000/claims/api/claims/';
+// Define the base URL for API calls
+const API_URL = 'http://localhost:8000';
 
-// Axios instance with CORS config
-const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  // Try with and without this option if you experience CORS issues
-  withCredentials: true,
-});
+// Define response types
+interface RagResponse {
+  answer: string;
+}
 
-// Add a function to get CSRF token if using Django's CSRF protection
-const getCookie = (name: string): string | null => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-  return null;
-};
-
-export interface Claim {
-  id?: number;
+interface Claim {
+  id: number;
   ic_number: string;
   age: number;
   months_as_customer: number;
@@ -43,66 +30,57 @@ export interface Claim {
   coverage_amount: number;
   claim_description: string;
   customer_background: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface ClaimsResponse {
+interface PaginatedResponse {
   count: number;
   next: string | null;
   previous: string | null;
   results: Claim[];
 }
 
-export interface PredictionInput {
-  age: number;
-  months_as_customer: number;
-  vehicle_age_years: number;
-  vehicle_make: string;
-  policy_expired_flag: number;
-  deductible_amount: number;
-  market_value: number;
-  damage_severity_score: number;
-  repair_amount: number;
-  at_fault_flag: number;
-  time_to_report_days: number;
-  claim_reported_to_police_flag: number;
-  license_type_missing_flag: number;
-  num_third_parties: number;
-  num_witnesses: number;
-}
-
-export interface PredictionResponse {
-  approval: {
-    decision: number;
-    probability: number;
-  };
-  coverage: {
-    amount: number;
-  } | null;
-  anomaly: {
-    score: number;
-    is_anomaly: number;
-  };
-}
-
-export interface RagResponse {
-  answer: string;
-}
-
+// Define the claims service
 export const claimsService = {
-  // Get all claims with pagination
-  getAllClaims: async (page = 1): Promise<ClaimsResponse> => {
-    const response = await axios.get(`${API_URL}?page=${page}`);
-    return response.data;
+  // Method to query the RAG endpoint
+  ragQuery: async (query: string): Promise<RagResponse> => {
+    try {
+      const response = await axios.post<RagResponse>(`${API_URL}/claims/api/rag/`, {
+        query: query
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error calling RAG API:', error);
+      throw new Error('Failed to get response from AI assistant');
+    }
   },
-  
-  // Get a single claim by ID
+
+  // Additional methods for other API calls can be added here
+  getAllClaims: async (page = 1, search?: string): Promise<PaginatedResponse> => {
+    try {
+      let url = `${API_URL}/claims/api/claims/?page=${page}`;
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
+      const response = await axios.get<PaginatedResponse>(url);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching claims:', error);
+      throw new Error('Failed to fetch claims data');
+    }
+  },
+
   getClaimById: async (id: number): Promise<Claim> => {
-    const response = await axios.get(`${API_URL}${id}/`);
-    return response.data;
+    try {
+      const response = await axios.get<Claim>(`${API_URL}/claims/api/claims/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching claim #${id}:`, error);
+      throw new Error('Failed to fetch claim data');
+    }
   },
-  
+
   // Create a new claim
   createClaim: async (claim: Claim): Promise<Claim> => {
     try {
@@ -157,18 +135,18 @@ export const claimsService = {
   
   // Update a claim
   updateClaim: async (id: number, claim: Claim): Promise<Claim> => {
-    const response = await axios.put(`${API_URL}${id}/`, claim);
+    const response = await axios.put(`${API_URL}/claims/api/claims/${id}/`, claim);
     return response.data;
   },
   
   // Delete a claim
   deleteClaim: async (id: number): Promise<void> => {
-    await axios.delete(`${API_URL}${id}/`);
+    await axios.delete(`${API_URL}/claims/api/claims/${id}/`);
   },
   
   // Filter claims by damage score
   filterByDamageScore: async (minScore?: number, maxScore?: number): Promise<Claim[]> => {
-    let url = `${API_URL}filter_by_damage_score/`;
+    let url = `${API_URL}/claims/api/claims/filter_by_damage_score/`;
     if (minScore !== undefined || maxScore !== undefined) {
       url += '?';
       if (minScore !== undefined) url += `min_score=${minScore}`;
@@ -181,7 +159,7 @@ export const claimsService = {
   
   // Filter claims by repair amount
   filterByRepairAmount: async (minAmount?: number, maxAmount?: number): Promise<Claim[]> => {
-    let url = `${API_URL}filter_by_repair_amount/`;
+    let url = `${API_URL}/claims/api/claims/filter_by_repair_amount/`;
     if (minAmount !== undefined || maxAmount !== undefined) {
       url += '?';
       if (minAmount !== undefined) url += `min_amount=${minAmount}`;
@@ -194,7 +172,7 @@ export const claimsService = {
   
   // Search claims
   searchClaims: async (query: string): Promise<ClaimsResponse> => {
-    const response = await axios.get(`${API_URL}?search=${query}`);
+    const response = await axios.get(`${API_URL}/claims/api/claims/?search=${query}`);
     return response.data;
   },
   
@@ -222,29 +200,17 @@ export const claimsService = {
       throw error;
     }
   },
-  
-  // RAG query for insurance information (converted from FastAPI)
-  ragQuery: async (prompt: string): Promise<RagResponse> => {
+
+  // Health check
+  async checkHealth(): Promise<{ status: string; timestamp: string; message: string }> {
     try {
-      const csrfToken = getCookie('csrftoken');
-      
-      const response = await apiClient.post('api/rag/', { prompt }, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
-        },
-      });
-      
+      const response = await axios.get<{ status: string; timestamp: string; message: string }>(
+        `${API_URL}/health`
+      );
       return response.data;
-    } catch (error: any) {
-      console.error('RAG API error:', error);
-      
-      if (error.response) {
-        console.error('Error status:', error.response.status);
-        console.error('Error data:', error.response.data);
-      }
-      
-      throw error;
+    } catch (error) {
+      console.error("Error checking server health:", error);
+      throw new Error("Server health check failed");
     }
   }
 }; 
