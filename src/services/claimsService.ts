@@ -1,4 +1,6 @@
+
 import axios from 'axios';
+import { supabase } from "@/integrations/supabase/client";
 
 // Define the base URL for API calls
 const API_URL = 'http://localhost:8000';
@@ -8,9 +10,11 @@ interface RagResponse {
   answer: string;
 }
 
-interface Claim {
-  id: number;
+// Export the Claim interface so it can be imported elsewhere
+export interface Claim {
+  id: string | number;
   ic_number: string;
+  plate_number: string;
   age: number;
   months_as_customer: number;
   vehicle_age_years: number;
@@ -30,15 +34,43 @@ interface Claim {
   coverage_amount: number;
   claim_description: string;
   customer_background: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-interface PaginatedResponse {
+export interface PaginatedResponse {
   count: number;
   next: string | null;
   previous: string | null;
   results: Claim[];
+}
+
+// Helper function for cookie retrieval
+const getCookie = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+};
+
+// Simple API client for compatibility
+const apiClient = {
+  post: axios.post
+};
+
+export interface ClaimsResponse {
+  results: Claim[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}
+
+export interface PredictionInput {
+  [key: string]: any;
+}
+
+export interface PredictionResponse {
+  [key: string]: any;
 }
 
 // Define the claims service
@@ -56,9 +88,10 @@ export const claimsService = {
     }
   },
 
-  // Additional methods for other API calls can be added here
-  getAllClaims: async (page = 1, search?: string): Promise<PaginatedResponse> => {
+  // Fallback function to get claims from FastAPI
+  fallbackToFastAPI: async (page = 1, search?: string): Promise<PaginatedResponse> => {
     try {
+      console.log("Falling back to FastAPI...");
       let url = `${API_URL}/claims/api/claims/?page=${page}`;
       if (search) {
         url += `&search=${encodeURIComponent(search)}`;
@@ -66,24 +99,198 @@ export const claimsService = {
       const response = await axios.get<PaginatedResponse>(url);
       return response.data;
     } catch (error) {
-      console.error('Error fetching claims:', error);
-      throw new Error('Failed to fetch claims data');
+      console.error('Error fetching claims from FastAPI:', error);
+      throw new Error('Failed to fetch claims data from all sources');
     }
   },
 
-  getClaimById: async (id: number): Promise<Claim> => {
+  // Get all claims - now using dummy data for Dashboard
+  getAllClaims: async (page = 1): Promise<PaginatedResponse> => {
     try {
+      console.log("Using dummy data for claims...");
+      
+      // Dummy data for claims
+      const dummyData: Claim[] = [
+        {
+          id: "1",
+          ic_number: "IC12345678",
+          plate_number: "ABC1234",
+          vehicle_make: "Toyota Camry",
+          vehicle_age_years: 5,
+          claim_description: "Front bumper damage due to collision with another vehicle at traffic light. The other driver ran a red light and crashed into my car.",
+          repair_amount: 3500,
+          approval_flag: true,
+          claim_reported_to_police_flag: true,
+          policy_expired_flag: false,
+          at_fault_flag: false,
+          age: 35,
+          months_as_customer: 24,
+          deductible_amount: 500,
+          market_value: 42000,
+          damage_severity_score: 7,
+          time_to_report_days: 1,
+          license_type_missing_flag: false,
+          num_third_parties: 1,
+          num_witnesses: 2,
+          coverage_amount: 50000,
+          customer_background: "Long-term customer with clean driving record",
+          created_at: "2025-04-10T09:00:00Z"
+        },
+        {
+          id: "2",
+          ic_number: "IC98765432",
+          plate_number: "XYZ9876",
+          vehicle_make: "Honda Civic",
+          vehicle_age_years: 2,
+          claim_description: "Side mirror broken and door dented while parked at shopping mall. Appears to be hit-and-run incident.",
+          repair_amount: 1200,
+          approval_flag: false,
+          claim_reported_to_police_flag: false,
+          policy_expired_flag: false,
+          at_fault_flag: false,
+          age: 28,
+          months_as_customer: 14,
+          deductible_amount: 300,
+          market_value: 32000,
+          damage_severity_score: 4,
+          time_to_report_days: 3,
+          license_type_missing_flag: false,
+          num_third_parties: 0,
+          num_witnesses: 0,
+          coverage_amount: 35000,
+          customer_background: "No previous claims history",
+          created_at: "2025-05-02T14:30:00Z"
+        },
+        {
+          id: "3",
+          ic_number: "IC45678901",
+          plate_number: "DEF4567",
+          vehicle_make: "BMW 3 Series",
+          vehicle_age_years: 1,
+          claim_description: "Windshield cracked due to falling tree branch during heavy storm. Need full replacement of front windshield.",
+          repair_amount: 2800,
+          approval_flag: true,
+          claim_reported_to_police_flag: false,
+          policy_expired_flag: false,
+          at_fault_flag: false,
+          age: 45,
+          months_as_customer: 36,
+          deductible_amount: 1000,
+          market_value: 85000,
+          damage_severity_score: 5,
+          time_to_report_days: 1,
+          license_type_missing_flag: false,
+          num_third_parties: 0,
+          num_witnesses: 0,
+          coverage_amount: 100000,
+          customer_background: "Premium policy holder with multiple vehicles insured",
+          created_at: "2025-05-10T11:15:00Z"
+        },
+        {
+          id: "4",
+          ic_number: "IC56789012",
+          plate_number: "GHI7890",
+          vehicle_make: "Mercedes C-Class",
+          vehicle_age_years: 3,
+          claim_description: "Rear bumper and tail light damaged in parking lot collision. Other driver admitted fault and provided contact details.",
+          repair_amount: 4200,
+          approval_flag: false,
+          claim_reported_to_police_flag: true,
+          policy_expired_flag: true, // Policy expired
+          at_fault_flag: false,
+          age: 52,
+          months_as_customer: 18,
+          deductible_amount: 750,
+          market_value: 65000,
+          damage_severity_score: 6,
+          time_to_report_days: 2,
+          license_type_missing_flag: false,
+          num_third_parties: 1,
+          num_witnesses: 0,
+          coverage_amount: 75000,
+          customer_background: "Recently renewed policy after expiration",
+          created_at: "2025-05-12T16:45:00Z"
+        },
+        {
+          id: "5",
+          ic_number: "IC34567890",
+          plate_number: "JKL2345",
+          vehicle_make: "Audi A4",
+          vehicle_age_years: 4,
+          claim_description: "Engine failure while driving on highway. Vehicle had to be towed to service center. Mechanical inspection shows major internal damage.",
+          repair_amount: 8500,
+          approval_flag: false,
+          claim_reported_to_police_flag: false,
+          policy_expired_flag: false,
+          at_fault_flag: true, // At fault claim
+          age: 33,
+          months_as_customer: 24,
+          deductible_amount: 1000,
+          market_value: 60000,
+          damage_severity_score: 9,
+          time_to_report_days: 1,
+          license_type_missing_flag: false,
+          num_third_parties: 0,
+          num_witnesses: 1,
+          coverage_amount: 70000,
+          customer_background: "Previous minor claims for cosmetic damage",
+          created_at: "2025-05-15T08:20:00Z"
+        }
+      ];
+      
+      // Simple pagination
+      const pageSize = 10;
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedClaims = dummyData.slice(startIndex, endIndex);
+      
+      return {
+        count: dummyData.length,
+        next: endIndex < dummyData.length ? `/claims?page=${page + 1}` : null,
+        previous: page > 1 ? `/claims?page=${page - 1}` : null,
+        results: paginatedClaims
+      };
+    } catch (error) {
+      console.error('Error fetching dummy claims:', error);
+      return this.fallbackToFastAPI(page);
+    }
+  },
+
+  // Fallback function to get claim by ID from FastAPI
+  fallbackGetClaimById: async (id: number | string): Promise<Claim> => {
+    try {
+      console.log("Falling back to FastAPI for single claim...");
       const response = await axios.get<Claim>(`${API_URL}/claims/api/claims/${id}/`);
       return response.data;
     } catch (error) {
-      console.error(`Error fetching claim #${id}:`, error);
-      throw new Error('Failed to fetch claim data');
+      console.error(`Error fetching claim #${id} from FastAPI:`, error);
+      throw new Error('Failed to fetch claim data from all sources');
     }
   },
 
-  // Create a new claim
-  createClaim: async (claim: Claim): Promise<Claim> => {
+  // Get claim by ID - now using dummy data
+  getClaimById: async (id: number | string): Promise<Claim> => {
     try {
+      // First, try to find in our dummy data
+      const dummyClaims = (await this.getAllClaims()).results;
+      const claim = dummyClaims.find(c => c.id.toString() === id.toString());
+      
+      if (claim) {
+        return claim;
+      }
+      
+      // If not found in dummy data, try FastAPI
+      return this.fallbackGetClaimById(id);
+    } catch (error) {
+      console.error(`Error fetching claim #${id}:`, error);
+      return this.fallbackGetClaimById(id);
+    }
+  },
+  
+  // Fallback function to create claim in FastAPI
+  fallbackCreateClaim: async (claim: Omit<Claim, 'id'>): Promise<Claim> => {
+    try {
+      console.log("Falling back to FastAPI for claim creation...");
       const csrfToken = getCookie('csrftoken');
       
       try {
@@ -102,7 +309,7 @@ export const claimsService = {
         
         // Second attempt: Try with direct axios without credentials (CORS fallback)
         console.log('Trying fallback without credentials...');
-        const fallbackResponse = await axios.post(API_URL, claim, {
+        const fallbackResponse = await axios.post(`${API_URL}/claims/api/claims/`, claim, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -133,6 +340,29 @@ export const claimsService = {
     }
   },
   
+  // Create a new claim - mock implementation
+  createClaim: async (claim: Omit<Claim, 'id'>): Promise<Claim> => {
+    try {
+      console.log('Creating new claim:', claim);
+      
+      // Generate a random ID for the dummy claim
+      const newId = Math.floor(Math.random() * 10000).toString();
+      const newClaim = { 
+        ...claim, 
+        id: newId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      // In a real app, you'd insert into Supabase here
+      console.log('Created new claim with ID:', newId);
+      return newClaim;
+    } catch (error) {
+      console.error('Error creating claim:', error);
+      return this.fallbackCreateClaim(claim);
+    }
+  },
+  
   // Update a claim
   updateClaim: async (id: number, claim: Claim): Promise<Claim> => {
     const response = await axios.put(`${API_URL}/claims/api/claims/${id}/`, claim);
@@ -142,63 +372,6 @@ export const claimsService = {
   // Delete a claim
   deleteClaim: async (id: number): Promise<void> => {
     await axios.delete(`${API_URL}/claims/api/claims/${id}/`);
-  },
-  
-  // Filter claims by damage score
-  filterByDamageScore: async (minScore?: number, maxScore?: number): Promise<Claim[]> => {
-    let url = `${API_URL}/claims/api/claims/filter_by_damage_score/`;
-    if (minScore !== undefined || maxScore !== undefined) {
-      url += '?';
-      if (minScore !== undefined) url += `min_score=${minScore}`;
-      if (minScore !== undefined && maxScore !== undefined) url += '&';
-      if (maxScore !== undefined) url += `max_score=${maxScore}`;
-    }
-    const response = await axios.get(url);
-    return response.data;
-  },
-  
-  // Filter claims by repair amount
-  filterByRepairAmount: async (minAmount?: number, maxAmount?: number): Promise<Claim[]> => {
-    let url = `${API_URL}/claims/api/claims/filter_by_repair_amount/`;
-    if (minAmount !== undefined || maxAmount !== undefined) {
-      url += '?';
-      if (minAmount !== undefined) url += `min_amount=${minAmount}`;
-      if (minAmount !== undefined && maxAmount !== undefined) url += '&';
-      if (maxAmount !== undefined) url += `max_amount=${maxAmount}`;
-    }
-    const response = await axios.get(url);
-    return response.data;
-  },
-  
-  // Search claims
-  searchClaims: async (query: string): Promise<ClaimsResponse> => {
-    const response = await axios.get(`${API_URL}/claims/api/claims/?search=${query}`);
-    return response.data;
-  },
-  
-  // Predict claim approval (converted from FastAPI)
-  predictClaim: async (data: PredictionInput): Promise<PredictionResponse> => {
-    try {
-      const csrfToken = getCookie('csrftoken');
-      
-      const response = await apiClient.post('api/predict/', data, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken && { 'X-CSRFToken': csrfToken }),
-        },
-      });
-      
-      return response.data;
-    } catch (error: any) {
-      console.error('Prediction API error:', error);
-      
-      if (error.response) {
-        console.error('Error status:', error.response.status);
-        console.error('Error data:', error.response.data);
-      }
-      
-      throw error;
-    }
   },
 
   // Health check
@@ -213,4 +386,4 @@ export const claimsService = {
       throw new Error("Server health check failed");
     }
   }
-}; 
+};

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -14,42 +15,41 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Check, Clock, X, FileText, MessageSquare, ArrowRight, BarChart3, FileCheck } from "lucide-react";
-import { claimsService, Claim } from "@/services/claimsService";
 import { useToast } from "@/hooks/use-toast";
+import { claimsService, Claim } from "@/services/claimsService";
 
 const Dashboard = () => {
   const { toast } = useToast();
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedClaimId, setSelectedClaimId] = useState<number | null>(null);
+  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   
-  // Fetch claims on component mount
   useEffect(() => {
     const fetchClaims = async () => {
       try {
-        setLoading(true);
         const response = await claimsService.getAllClaims();
         setClaims(response.results);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching claims:", error);
         toast({
           title: "Error",
-          description: "Failed to fetch claims. Please try again later.",
+          description: "Failed to fetch claims data. Please try again.",
           variant: "destructive",
         });
-      } finally {
         setLoading(false);
       }
     };
-
+    
     fetchClaims();
   }, [toast]);
   
+  // Find the selected claim
   const selectedClaim = claims.find(claim => claim.id === selectedClaimId);
   
   // Count claims by status
   const approvedClaims = claims.filter(claim => claim.approval_flag).length;
-  const processingClaims = claims.filter(claim => !claim.approval_flag).length;
+  const notApprovedClaims = claims.filter(claim => !claim.approval_flag).length;
   
   const getStatusBadge = (isApproved: boolean) => {
     return isApproved 
@@ -108,7 +108,7 @@ const Dashboard = () => {
             <CardDescription>Claims that were not approved</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">{processingClaims}</div>
+            <div className="text-3xl font-bold text-red-600">{notApprovedClaims}</div>
           </CardContent>
         </Card>
       </div>
@@ -133,7 +133,7 @@ const Dashboard = () => {
                 className={`cursor-pointer hover:border-primary transition ${
                   selectedClaimId === claim.id ? 'border-primary' : ''
                 }`}
-                onClick={() => setSelectedClaimId(claim.id === selectedClaimId ? null : claim.id)}
+                onClick={() => setSelectedClaimId(claim.id === selectedClaimId ? null : claim.id.toString())}
               >
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
@@ -142,7 +142,7 @@ const Dashboard = () => {
                         {getStatusIcon(claim.approval_flag)} Claim ID: {claim.id}
                       </CardTitle>
                       <CardDescription>
-                        {new Date(claim.created_at || '').toLocaleDateString()} • IC: {claim.ic_number}
+                        {new Date(claim.created_at || '').toLocaleDateString()} • Plate Number: {claim.plate_number}
                       </CardDescription>
                     </div>
                     {getStatusBadge(claim.approval_flag)}
@@ -184,10 +184,10 @@ const Dashboard = () => {
                         View Details
                       </Button>
                       
-                      <Button size="sm" className="text-xs" asChild>
+                      <Button size="sm" className="text-xs bg-primary" asChild>
                         <Link to={`/chat?claim=${claim.id}`}>
                           <MessageSquare className="h-3 w-3 mr-1" /> 
-                          Ask about this claim
+                          {claim.approval_flag ? "Ask About Claim" : "Ask Why Rejected"}
                         </Link>
                       </Button>
                     </CardFooter>
@@ -217,13 +217,24 @@ const Dashboard = () => {
                       {getStatusBadge(claim.approval_flag)}
                     </div>
                     <CardDescription>
-                      {new Date(claim.created_at || '').toLocaleDateString()} • IC: {claim.ic_number}
+                      {new Date(claim.created_at || '').toLocaleDateString()} • Plate Number: {claim.plate_number}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p>Vehicle: {claim.vehicle_make}</p>
                     <p className="mt-2">{claim.claim_description}</p>
                     <p className="mt-2 font-semibold">Approved amount: RM {claim.repair_amount}</p>
+                    <div className="mt-4">
+                      <Badge variant="outline" className="mb-3 text-green-500 border-green-300 bg-green-50">
+                        Claim Approved
+                      </Badge>
+                      <Button size="sm" className="w-full bg-gradient-to-r from-primary to-accent hover:scale-105 transition-all duration-300" asChild>
+                        <Link to={`/chat?claim=${claim.id}`} className="flex items-center justify-center">
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Ask About This Claim <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -240,18 +251,23 @@ const Dashboard = () => {
                       {getStatusBadge(claim.approval_flag)}
                     </div>
                     <CardDescription>
-                      {new Date(claim.created_at || '').toLocaleDateString()} • IC: {claim.ic_number}
+                      {new Date(claim.created_at || '').toLocaleDateString()} • Plate Number: {claim.plate_number}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p>Vehicle: {claim.vehicle_make}</p>
                     <p className="mt-2">{claim.claim_description}</p>
-                    <Button size="sm" className="mt-4 bg-gradient-to-r from-primary to-accent hover:scale-105 transition-all duration-300" asChild>
-                      <Link to={`/chat?claim=${claim.id}`} className="flex items-center">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Ask Why This Was Not Approved <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
+                    <div className="mt-4">
+                      <Badge variant="outline" className="mb-3 text-red-500 border-red-300 bg-red-50">
+                        {claim.policy_expired_flag ? "Policy Expired" : claim.at_fault_flag ? "At-Fault Claim" : "Claim Requires Review"}
+                      </Badge>
+                      <Button size="sm" className="w-full bg-gradient-to-r from-primary to-accent hover:scale-105 transition-all duration-300" asChild>
+                        <Link to={`/chat?claim=${claim.id}`} className="flex items-center justify-center">
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Ask Why This Was Not Approved <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
