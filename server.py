@@ -38,12 +38,12 @@ coverage_model = joblib.load("Coverage_Model.pkl")
 
 # Setup RAG clients
 openai_client = OpenAI(
-    api_key="sk-91d59f4cf5ff44cf9f8280a91dacbb1c",
-    base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+    api_key="API_KEY",
+    base_url="URL_LINK"
 )
 vector_client = DashClient(
-    api_key="sk-eAO7D10gZP2kzhjeKmiI7b6bOHTmoD6B9CAC6318F11F097B99A92126D810D",
-    endpoint="vrs-sg-l0z49hq250003n.dashvector.ap-southeast-1.aliyuncs.com"
+    "API_KEY",
+    endpoint="URL_END"
 )
 
 collection = vector_client.get(name="quickstart")
