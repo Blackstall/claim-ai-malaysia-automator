@@ -12,6 +12,8 @@ This is a FastAPI-based backend for the MyClaim AI application, providing claim 
 - Anomaly detection for fraudulent claims
 - RAG-based chat support for insurance queries
 
+watch our pitch : https://youtu.be/rccmFl-BP-w
+
 ## Setup
 
 1. Clone the repository
